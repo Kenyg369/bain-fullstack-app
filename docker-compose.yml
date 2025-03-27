@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+    frontend:
+        build:
+            context: .
+            dockerfile: Dockerfile-node
+        working_dir: /app
+        volumes:
+            - ./frontend:/app
+        command: sh -c "pnpm i && pnpm dev"
+        ports:
+            - '5174:5174'
+        networks:
+            - app-network
+        depends_on:
+            - backend
+
+    backend:
+        build:
+            context: .
+            dockerfile: Dockerfile-node
+        working_dir: /app
+        volumes:
+            - ./backend:/app
+        command: sh -c "pnpm i && pnpm dev"
+        ports:
+            - '3699:3699'
+        networks:
+            - app-network
+        depends_on:
+            - mongodb
+        environment:
+            - MONGODB_URI=mongodb://root:dev123123@mongodb:27017/
+
+    mongodb:
+        image: mongo:latest
+        ports:
+            - '27017:27017'
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=root
+            - MONGO_INITDB_ROOT_PASSWORD=dev123123
+        volumes:
+            - ./mongodb_data:/data/db
+        networks:
+            - app-network
+
+networks:
+    app-network:
+        driver: bridge
+
+volumes:
+    mongodb_data:
+        driver: local
